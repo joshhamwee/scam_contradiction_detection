@@ -13,10 +13,10 @@ demographic_races = {'asian': 1271, 'hispanic': 3693, 'white': 3447, 'middle_eas
 outfile = open("data_json"+os.sep+"data.csv", 'w')
 out = csv.writer(outfile)
 
-out.writerow(["text_age", "text_gender", "image_age", "image_gender", "demographic_age", "demographic_gender", "demographic_ethnicity","labels"])
+out.writerow(["text_age", "text_gender", "image_age", "image_gender", "demographic_age", "demographic_gender", "demographic_ethnicity","image_demographic_gender","text_image_age","labels"])
 
-for jsonfile in os.listdir('data_json/real_contradictions'):
-    data = json.load(open("data_json"+os.sep+'real_contradictions'+os.sep+jsonfile,'r'))
+for jsonfile in os.listdir('data_json/real_contradictions_2'):
+    data = json.load(open("data_json"+os.sep+'real_contradictions_2'+os.sep+jsonfile,'r'))
     try:
         a = data['user_text']['age_inconsistency']
     except Exception as e:
@@ -53,10 +53,19 @@ for jsonfile in os.listdir('data_json/real_contradictions'):
     except Exception as e:
         h = None
 
-    out.writerow([a,b,c,d,f,g,h,0])
+    try:
+        i = data['api_vs_api']['image_image_gender']
+    except Exception as e:
+        i = None
 
-for jsonfile in os.listdir('data_json/scam_contradictions'):
-    data = json.load(open("data_json"+os.sep+'scam_contradictions'+os.sep+jsonfile,'r'))
+    try:
+        j = data['api_vs_api']['text_image_age']
+    except Exception as e:
+        j = None
+    out.writerow([a,b,c,d,f,g,h,i,j,0])
+
+for jsonfile in os.listdir('data_json/scam_contradictions_2'):
+    data = json.load(open("data_json"+os.sep+'scam_contradictions_2'+os.sep+jsonfile,'r'))
     try:
         a = data['user_text']['age_inconsistency']
     except Exception as e:
@@ -93,4 +102,14 @@ for jsonfile in os.listdir('data_json/scam_contradictions'):
     except Exception as e:
         h = None
 
-    out.writerow([a,b,c,d,f,g,h,1])
+    try:
+        i = data['api_vs_api']['image_image_gender']
+    except Exception as e:
+        i = None
+
+    try:
+        j = data['api_vs_api']['text_image_age']
+    except Exception as e:
+        j = None
+
+    out.writerow([a,b,c,d,f,g,h,i,j,1])

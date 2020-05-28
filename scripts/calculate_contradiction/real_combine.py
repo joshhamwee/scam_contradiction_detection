@@ -7,7 +7,6 @@ import re
 
 demographics_ids = {'ai_r5F00Gqn': 'white', 'ai_l9ngrR28': 'hispanic', 'ai_659b6V0v':'asian', 'ai_WWxnB3mw': 'american_indian', 'ai_wScNwk9Z':'black', 'ai_bZft5m0H':'middle_eastern_north_african', 'ai_1qp01psl':'native_hawaiin'}
 genders_ids = {'ai_zgR2BBt0': 'male', 'ai_cVWr8NK5': 'female'}
-# jsonfile = '1runner73.json'
 counter = 0
 
 

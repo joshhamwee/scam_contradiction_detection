@@ -5,7 +5,7 @@ import random
 import re
 import csv
 
-output = {'user_text': {}, 'user_image': {}, 'user_demographic':{}, 'image_demographic':{}}
+output = {'user_text': {}, 'user_image': {}, 'user_demographic':{}, 'image_demographic':{},'api_vs_api':{}}
 user_races = {'hispanic': 4643, 'mixed': 844, 'white': 4043, 'pacific islander': 40, 'black': 659, 'asian': 400, 'native american': 107, 'middle eastern': 172, '-': 2}
 demographic_races = {'asian': 1271, 'hispanic': 3693, 'white': 3447, 'middle_eastern_north_african': 197, 'black': 997, 'american_indian': 14, 'native_hawaiin': 11}
 jsonfile = '18.json'
@@ -59,10 +59,11 @@ for jsonfile in os.listdir('data_json/scam_combined_responses'):
             maxAge = abs(int(data['image_age_'+str(i)][2:]))
             if data['user_age'] >= minAge and data['user_age'] <= maxAge:
                 age_inconsistency_average += 0.0
-            elif abs(data['user_age'] - minAge) < 5 or abs(data['user_age'] - maxAge) < 5:
-                age_inconsistency_average += 0.5
             else:
-                age_inconsistency_average += 1.0
+                temp1 = abs(data['user_age'] - minAge)
+                temp2 = abs(data['user_age'] - maxAge)
+
+                age_inconsistency_average += max(temp1,temp2)
             counter += 1
         except Exception as e:
             pass
@@ -155,5 +156,48 @@ for jsonfile in os.listdir('data_json/scam_combined_responses'):
     else:
         output['user_demographic']['ethnicity_inconsistency'] = None
 
-    with open("data_json"+os.sep+"scam_contradictions"+os.sep+jsonfile, 'w') as outfile:
+
+    gender_inconsistency_average_2 = 0
+    counter = 0
+    for i in range(0,12):
+        try:
+            if  data['demographic_gender_'+str(i)] == data['image_gender_'+str(i)]:
+                gender_inconsistency_average_2 += ((1 - float(data['image_gender_confidence_'+str(i)]))+(1 - data['demographic_gender_confidence_'+str(i)]))/2
+            else:
+                gender_inconsistency_average_2 += (data['image_gender_confidence_'+str(i)]+data['demographic_gender_confidence_'+str(i)])/2
+            counter += 1
+        except Exception as e:
+            pass
+
+    if counter != 0:
+        output['api_vs_api']['image_image_gender'] = gender_inconsistency_average_2/counter
+    else:
+        output['api_vs_api']['image_image_gender'] = None
+
+
+    age_inconsistency_average = 0
+    counter = 0
+    for i in range(0,12):
+        try:
+            minAge = int(data['text_age'][:2])
+            maxAge = abs(int(data['text_age'][2:]))
+
+            demographic_age = float(data['demographic_age_'+str(i)])
+            if demographic_age >= minAge and demographic_age <= maxAge:
+                age_inconsistency_average += 0.0
+            else:
+                temp1 = abs(data['user_age'] - minAge)
+                temp2 = abs(data['user_age'] - maxAge)
+
+                age_inconsistency_average += max(temp1,temp2)
+            counter += 1
+        except Exception as e:
+            pass
+
+    if counter != 0:
+        output['api_vs_api']['text_image_age'] = age_inconsistency_average/counter
+    else:
+        output['api_vs_api']['text_image_age'] = None
+
+    with open("data_json"+os.sep+"scam_contradictions_2"+os.sep+jsonfile, 'w') as outfile:
         json.dump(output, outfile)

@@ -1,13 +1,15 @@
+from sklearn.ensemble import VotingClassifier
 import csv
 import numpy as np
 from sklearn import preprocessing
 from sklearn.model_selection import train_test_split
-from sklearn.naive_bayes import GaussianNB
-from sklearn.naive_bayes import ComplementNB
+from sklearn.ensemble import RandomForestClassifier
+from sklearn import svm
 from sklearn.metrics import plot_confusion_matrix
-from sklearn.model_selection import cross_val_predict
-from sklearn.model_selection import KFold
 from sklearn.metrics import precision_recall_fscore_support
+from sklearn.tree import DecisionTreeClassifier
+from sklearn.neighbors import KNeighborsClassifier
+from sklearn.naive_bayes import GaussianNB
 import matplotlib.pyplot as plt
 import pandas as pd
 from sklearn import metrics
@@ -18,9 +20,11 @@ in_data = pd.read_csv("data_json/data.csv", header=0)
 in_data = in_data.dropna()
 
 in_data = in_data.sample(frac=1).reset_index(drop=True)
-print(in_data)
+
 
 feature_cols = ['text_age','text_gender','image_age','image_gender','demographic_age','demographic_gender','demographic_ethnicity','image_demographic_gender','text_image_age']
+# feature_cols = ['text_age','text_gender','image_age','image_gender','demographic_age','demographic_gender','demographic_ethnicity']
+
 X = in_data[feature_cols]
 y = in_data[['labels']]
 
@@ -41,18 +45,26 @@ scam_recall = 0
 real_f1 = 0
 scam_f1 = 0
 
+features_imp_average = np.zeros(len(feature_cols))
+
+
+
 for i in range(0,10):
 
     X_train,X_test,y_train,y_test=train_test_split(X,y,test_size=0.20)
 
-    #Create a Gaussian Classifier
-    model = GaussianNB()
+    #Create a all classifier Classifier
+    classifiers = []
+    classifiers.append(('RF', RandomForestClassifier()))
+    classifiers.append(('DT', DecisionTreeClassifier(criterion="entropy",min_samples_split=3,max_features=5,min_samples_leaf=5)))
+    # classifiers.append(('KNN', KNeighborsClassifier(n_neighbors=5)))
+    classifiers.append(('NB', GaussianNB()))
 
-
-    # Train the model using the training sets
+    model = VotingClassifier(estimators = classifiers, voting ='hard')
     model.fit(X_train, y_train)
-
     y_pred = model.predict(X_test)
+    # Train the model using the training sets
+
     scores = precision_recall_fscore_support(y_test,y_pred)
     print(scores)
     scores[0][0]
@@ -71,6 +83,7 @@ for i in range(0,10):
     average_cnf_matrix[1] += cnf_matrix[0][1]
     average_cnf_matrix[2] += cnf_matrix[1][0]
     average_cnf_matrix[3] += cnf_matrix[1][1]
+
 
 average_cnf_matrix = np.divide(average_cnf_matrix,10)
 print("Confusion matrix:", average_cnf_matrix)

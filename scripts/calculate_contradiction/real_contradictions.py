@@ -5,7 +5,7 @@ import random
 import re
 import csv
 
-output = {'user_text': {}, 'user_image': {}, 'user_demographic':{}, 'image_demographic':{}}
+output = {'user_text': {}, 'user_image': {}, 'user_demographic':{}, 'image_demographic':{},'api_vs_api':{}}
 user_races = {'hispanic': 4643, 'mixed': 844, 'white': 4043, 'pacific islander': 40, 'black': 659, 'asian': 400, 'native american': 107, 'middle eastern': 172, '-': 2}
 demographic_races = {'asian': 1271, 'hispanic': 3693, 'white': 3447, 'middle_eastern_north_african': 197, 'black': 997, 'american_indian': 14, 'native_hawaiin': 11}
 
@@ -19,7 +19,7 @@ for jsonfile in os.listdir('data_json/real_combined_responses'):
     ##Which contradictions do we need?
     #TEXT API
     #User age -> Text age
-    try:    
+    try:
         minAge = int(data['text_age'][:2])
         maxAge = abs(int(data['text_age'][2:]))
         if data['user_age'] >= minAge and data['user_age'] <= maxAge:
@@ -55,10 +55,11 @@ for jsonfile in os.listdir('data_json/real_combined_responses'):
         maxAge = abs(int(data['image_age'][2:]))
         if data['user_age'] >= minAge and data['user_age'] <= maxAge:
             output['user_image']['age_inconsistency'] = 0.0
-        elif abs(data['user_age'] - minAge) < 5 or abs(data['user_age'] - maxAge) < 5:
-            output['user_image']['age_inconsistency'] = 0.5
         else:
-            output['user_image']['age_inconsistency'] = 1.0
+            temp1 = abs(data['user_age'] - minAge)
+            temp2 = abs(data['user_age'] - maxAge)
+
+            output['user_image']['age_inconsistency'] = max(temp1,temp2)
     except Exception as e:
         output['user_image']['age_inconsistency'] = None
         print(e)
@@ -114,5 +115,28 @@ for jsonfile in os.listdir('data_json/real_combined_responses'):
         output['user_demographic']['ethnicity_inconsistency'] = None
         print(e)
 
-    with open("data_json"+os.sep+"real_contradictions"+os.sep+jsonfile, 'w') as outfile:
+    try:
+        if  data['demographic_gender'] == data['image_gender']:
+            output['api_vs_api']['image_image_gender'] = ((1 - float(data['image_gender_confidence']))+(1 - data['demographic_gender_confidence']))/2
+        else:
+            output['api_vs_api']['image_image_gender'] = (data['image_gender_confidence']+data['demographic_gender_confidence'])/2
+    except Exception as e:
+        pass
+
+    try:
+        minAge = int(data['text_age'][:2])
+        maxAge = abs(int(data['text_age'][2:]))
+
+        demographic_age = float(data['demographic_age'])
+        if demographic_age >= minAge and demographic_age <= maxAge:
+            output['api_vs_api']['text_image_age'] = 0.0
+        else:
+            temp1 = abs(data['user_age'] - minAge)
+            temp2 = abs(data['user_age'] - maxAge)
+
+            output['api_vs_api']['text_image_age'] = max(temp1,temp2)
+    except Exception as e:
+        pass
+
+    with open("data_json"+os.sep+"real_contradictions_2"+os.sep+jsonfile, 'w') as outfile:
         json.dump(output, outfile)
